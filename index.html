@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>20 Laws of Feminine Power - PDF Guide</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600&family=Montserrat:wght@300;400;500&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        :root {
+            --soft-pink: #ffd6d6;
+            --light-pink: #ffe4e1;
+            --beige: #f5f0e8;
+            --nude: #e8d5c4;
+            --white: #ffffff;
+            --text-dark: #5a5a5a;
+            --text-light: #8a8a8a;
+        }
+        
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background: linear-gradient(135deg, var(--light-pink) 0%, var(--beige) 100%);
+            color: var(--text-dark);
+            line-height: 1.6;
+            padding: 0;
+            min-height: 100vh;
+        }
+        
+        h1, h2, h3 {
+            font-family: 'Cormorant Garamond', serif;
+            font-weight: 400;
+        }
+
+        /* Main Container */
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 1.5rem 1rem;
+        }
+
+        /* Product Image */
+        .product-image {
+            width: 100%;
+            max-width: 500px;
+            margin: 0 auto 2rem;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
+        }
+
+        .product-image img {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        /* Product Title */
+        .product-title {
+            font-size: clamp(1.5rem, 5vw, 2.2rem);
+            text-align: center;
+            margin-bottom: 1rem;
+            color: var(--text-dark);
+            line-height: 1.3;
+            padding: 0 0.5rem;
+        }
+
+        /* Price */
+        .price {
+            font-size: clamp(2rem, 6vw, 2.8rem);
+            color: #ffb3b3;
+            font-weight: 600;
+            text-align: center;
+            margin: 1rem 0 1.5rem;
+        }
+
+        /* Description */
+        .description {
+            background: var(--white);
+            padding: clamp(1.5rem, 4vw, 2rem);
+            border-radius: 20px;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+        }
+
+        .description p {
+            color: var(--text-light);
+            line-height: 1.8;
+            margin-bottom: 1.5rem;
+            font-size: clamp(0.9rem, 2.5vw, 1rem);
+        }
+
+        .description h3 {
+            font-size: clamp(1.1rem, 3vw, 1.3rem);
+            margin-bottom: 1rem;
+            color: var(--text-dark);
+        }
+
+        .description ul {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+
+        .description li {
+            padding: 0.8rem 0;
+            border-bottom: 1px solid var(--beige);
+            color: var(--text-light);
+            font-size: clamp(0.85rem, 2.3vw, 0.95rem);
+        }
+
+        .description li:last-child {
+            border-bottom: none;
+        }
+
+        .description li:before {
+            content: "✦ ";
+            color: #ffb3b3;
+            margin-right: 0.5rem;
+        }
+
+        /* Buttons */
+        .btn {
+            display: block;
+            width: 100%;
+            padding: clamp(1rem, 3vw, 1.3rem);
+            background: linear-gradient(135deg, #ffb3b3 0%, #ffd6d6 100%);
+            color: var(--text-dark);
+            text-decoration: none;
+            border-radius: 50px;
+            font-weight: 500;
+            letter-spacing: 1px;
+            transition: all 0.3s;
+            border: none;
+            cursor: pointer;
+            font-size: clamp(0.9rem, 2.5vw, 1rem);
+            box-shadow: 0 4px 15px rgba(255, 179, 179, 0.3);
+            text-align: center;
+            margin-bottom: 1rem;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 179, 179, 0.4);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, var(--nude) 0%, var(--beige) 100%);
+            box-shadow: 0 4px 15px rgba(232, 213, 196, 0.3);
+        }
+
+        .btn-secondary:hover {
+            box-shadow: 0 6px 20px rgba(232, 213, 196, 0.4);
+        }
+
+        /* Payment Note */
+        .payment-note {
+            text-align: center;
+            color: var(--text-light);
+            font-size: clamp(0.85rem, 2.2vw, 0.9rem);
+            margin: 1rem 0;
+            padding: 0 1rem;
+        }
+
+        /* QR Code Section */
+        .qr-section {
+            background: var(--white);
+            padding: clamp(1.5rem, 4vw, 2rem);
+            border-radius: 20px;
+            margin: 1.5rem 0;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+            text-align: center;
+            display: none;
+        }
+
+        .qr-section.active {
+            display: block;
+        }
+
+        .qr-section h3 {
+            font-size: clamp(1rem, 2.8vw, 1.2rem);
+            margin-bottom: 1rem;
+            color: var(--text-dark);
+        }
+
+        .qr-code-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .qr-code-wrapper {
+            background: var(--white);
+            padding: 1rem;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .qr-code-wrapper img {
+            width: 200px;
+            height: 200px;
+            display: block;
+            max-width: 100%;
+        }
+
+        @media (max-width: 400px) {
+            .qr-code-wrapper img {
+                width: 180px;
+                height: 180px;
+            }
+        }
+
+        .qr-instructions {
+            color: var(--text-light);
+            font-size: clamp(0.85rem, 2.2vw, 0.9rem);
+            line-height: 1.6;
+        }
+
+        .toggle-qr {
+            background: transparent;
+            border: 1px solid var(--nude);
+            color: var(--text-dark);
+            padding: 0.5rem 1rem;
+            border-radius: 25px;
+            font-size: clamp(0.8rem, 2vw, 0.85rem);
+            cursor: pointer;
+            margin-top: 0.5rem;
+            transition: all 0.3s;
+        }
+
+        .toggle-qr:hover {
+            background: var(--beige);
+        }
+
+        /* Hidden Download Section */
+        .download-section {
+            display: none;
+            background: var(--white);
+            padding: clamp(2rem, 5vw, 3rem);
+            border-radius: 30px;
+            text-align: center;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+            margin-top: 2rem;
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        .download-section.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .download-section h2 {
+            font-size: clamp(1.8rem, 5vw, 2.2rem);
+            margin-bottom: 1rem;
+            line-height: 1.3;
+            color: var(--text-dark);
+        }
+
+        .download-section p {
+            font-size: clamp(0.95rem, 2.5vw, 1.05rem);
+            color: var(--text-light);
+            margin-bottom: 2rem;
+            line-height: 1.8;
+        }
+
+        .thank-you {
+            margin-top: 2rem;
+            padding-top: 2rem;
+            border-top: 1px solid var(--beige);
+            color: var(--text-light);
+            font-size: clamp(0.9rem, 2.3vw, 0.95rem);
+        }
+
+        /* Small device optimization */
+        @media (max-width: 400px) {
+            .container {
+                padding: 1rem 0.75rem;
+            }
+
+            .product-image {
+                border-radius: 15px;
+                margin-bottom: 1.5rem;
+            }
+
+            .description {
+                border-radius: 15px;
+            }
+
+            .btn {
+                padding: 1rem;
+                font-size: 0.95rem;
+            }
+        }
+
+        /* Large device optimization */
+        @media (min-width: 768px) {
+            .container {
+                padding: 2rem 2rem 3rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Product Page -->
+    <div id="product-page" class="container">
+        <!-- Product Image -->
+        <div class="product-image">
+            <img src="https://i.ibb.co/Fkcw8dsF/Whats-App-Image-2025-11-23-at-20-31-58-3c82bc27.jpg" alt="20 Laws of Feminine Power Guide Cover">
+        </div>
+
+        <!-- Product Title -->
+        <h1 class="product-title">20 Laws of Feminine Power – Complete PDF Guide</h1>
+
+        <!-- Price -->
+        <div class="price">₹199</div>
+
+        <!-- Description -->
+        <div class="description">
+            <p>
+                This comprehensive digital guide contains 20 transformative laws that will help you reconnect 
+                with your feminine essence, heal emotional wounds, and cultivate unshakeable confidence.
+            </p>
+            
+            <h3>What You'll Receive:</h3>
+            <ul>
+                <li>Complete 20 Laws of Feminine Power PDF Guide</li>
+                <li>Beautifully designed and easy to read</li>
+                <li>Instant digital download</li>
+                <li>Access anytime, anywhere on any device</li>
+                <li>Practical exercises and reflections</li>
+                <li>Lifetime access to your copy</li>
+            </ul>
+        </div>
+
+        <!-- Payment Button -->
+        <a href="upi://pay?pa=risthishende5@oksbi&pn=Risthi&am=199&cu=INR&tn=20%20Laws%20Feminine%20Power%20Guide" class="btn" id="buy-now-btn">
+            Buy Now – ₹199
+        </a>
+
+        <!-- QR Code Section -->
+        <div class="qr-section" id="qr-section">
+            <h3>Scan to Pay</h3>
+            <div class="qr-code-container">
+                <div class="qr-code-wrapper">
+                    <img id="qr-code-image" src="" alt="UPI QR Code">
+                </div>
+                <p class="qr-instructions">
+                    Scan this QR code with any UPI app (GPay, PhonePe, Paytm, etc.)<br>
+                    Amount: ₹199
+                </p>
+            </div>
+            <button class="toggle-qr" onclick="toggleQR()">Hide QR Code</button>
+        </div>
+
+        <button class="toggle-qr" id="show-qr-btn" onclick="toggleQR()" style="display: block; margin: 0.5rem auto 1.5rem;">
+            Show QR Code
+        </button>
+
+        <!-- Payment Note -->
+        <p class="payment-note">After payment, click "I've Paid" below to access your download</p>
+
+        <!-- I've Paid Button -->
+        <button class="btn btn-secondary" onclick="showDownload()">
+            I've Paid — Get My Guide
+        </button>
+
+        <!-- Hidden Download Section -->
+        <div id="download-section" class="download-section">
+            <h2>✨ Your PDF is ready ✨</h2>
+            <p>Thank you for your purchase! Click below to download your "20 Laws of Feminine Power" PDF Guide.</p>
+            
+            <a href="files/x9k3f2_20-laws.pdf" class="btn" download="20-Laws-of-Feminine-Power-Guide.pdf">
+                Download Your PDF Guide
+            </a>
+            
+            <p style="font-size: 0.9rem; margin-top: 1.5rem; color: var(--text-light);">
+                Save this link! You can download your guide anytime. If you have any issues, please contact us.
+            </p>
+            
+            <div class="thank-you">
+                <p>
+                    💖 Thank you for choosing to invest in yourself. May this guide serve you beautifully on your journey.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Generate QR Code on page load
+        window.addEventListener('DOMContentLoaded', function() {
+            const upiString = 'upi://pay?pa=risthishende5@oksbi&pn=Risthi&am=199&cu=INR&tn=20%20Laws%20Feminine%20Power%20Guide';
+            const qrCodeUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=' + encodeURIComponent(upiString);
+            document.getElementById('qr-code-image').src = qrCodeUrl;
+        });
+
+        // Toggle QR Code visibility
+        function toggleQR() {
+            const qrSection = document.getElementById('qr-section');
+            const showQrBtn = document.getElementById('show-qr-btn');
+            
+            if (qrSection.classList.contains('active')) {
+                qrSection.classList.remove('active');
+                showQrBtn.style.display = 'block';
+            } else {
+                qrSection.classList.add('active');
+                showQrBtn.style.display = 'none';
+            }
+        }
+
+        // Show download section
+        function showDownload() {
+            const downloadSection = document.getElementById('download-section');
+            downloadSection.classList.add('active');
+            
+            // Smooth scroll to download section
+            setTimeout(() => {
+                downloadSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }, 100);
+        }
+
+        // Handle UPI link clicks (mobile detection)
+        document.getElementById('buy-now-btn').addEventListener('click', function(e) {
+            // On mobile, the UPI link will open the app directly (let it work normally)
+            // On desktop, show QR code if not already visible (UPI links don't work on desktop)
+            if (window.innerWidth > 768) {
+                const qrSection = document.getElementById('qr-section');
+                if (!qrSection.classList.contains('active')) {
+                    e.preventDefault();
+                    toggleQR();
+                    setTimeout(() => {
+                        qrSection.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                    }, 50);
+                }
+            }
+        });
+    </script>
+</body>
+</html>
