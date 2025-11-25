@@ -510,6 +510,8 @@
             }
         }
 
+        const API_BASE = 'https://guide-backend.onrender.com';
+
         async function initiatePayment() {
             const btn = document.getElementById('buy-now-btn');
             const originalText = btn.innerHTML;
@@ -518,7 +520,7 @@
                 btn.disabled = true;
                 btn.innerHTML = '<span class="spinner"></span>Processing...';
 
-                const orderResponse = await fetch('/api/create-order', {
+                const orderResponse = await fetch(`${API_BASE}/api/create-order`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' }
                 });
@@ -569,7 +571,7 @@
                 btn.disabled = true;
                 btn.innerHTML = '<span class="spinner"></span>Verifying...';
 
-                const verifyRes = await fetch('/api/verify-payment', {
+                const verifyRes = await fetch(`${API_BASE}/api/verify-payment`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(response)
@@ -601,7 +603,7 @@
         function showDownloadSection(downloadToken, autoDownload = false) {
             const downloadSection = document.getElementById('download-section');
             const downloadLink = document.getElementById('download-link');
-            const downloadUrl = `/api/download/${downloadToken}`;
+            const downloadUrl = `${API_BASE}/api/download/${downloadToken}`;
             downloadLink.href = downloadUrl;
             downloadSection.classList.add('active');
             setTimeout(() => downloadSection.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
