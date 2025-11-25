@@ -9,9 +9,15 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Initialize Razorpay (supports GPay, PhonePe, Paytm, and all UPI apps)
+const { RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET } = process.env;
+if (!RAZORPAY_KEY_ID || !RAZORPAY_KEY_SECRET) {
+    console.error('\n❌ Razorpay keys missing. Set RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET in .env before launching.\n');
+    process.exit(1);
+}
+
 const razorpay = new Razorpay({
-    key_id: process.env.RAZORPAY_KEY_ID || 'rzp_test_1234567890', // Replace with your key
-    key_secret: process.env.RAZORPAY_KEY_SECRET || 'your_secret_key' // Replace with your secret
+    key_id: RAZORPAY_KEY_ID,
+    key_secret: RAZORPAY_KEY_SECRET
 });
 
 // Middleware
