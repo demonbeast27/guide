@@ -280,6 +280,9 @@ app.get('/api/download/:token', (req, res) => {
         }
 
         const tokenData = downloadTokens.get(token);
+        if (typeof tokenData.used === 'undefined') {
+            tokenData.used = false;
+        }
 
         // Check if token is already used (one-time use)
         if (tokenData.used) {
@@ -299,9 +302,6 @@ app.get('/api/download/:token', (req, res) => {
                 message: 'Download link has expired'
             });
         }
-
-        // Mark token as used
-        tokenData.used = true;
 
         // Get PDF file path
         const pdfPath = path.join(__dirname, 'files', 'x9k3f2_20-laws.pdf');
@@ -323,8 +323,20 @@ app.get('/api/download/:token', (req, res) => {
         const fileStream = fs.createReadStream(pdfPath);
         fileStream.pipe(res);
 
-        // Log download (optional)
-        console.log(`PDF downloaded: Token ${token.substring(0, 8)}...`);
+        let completed = false;
+        res.on('finish', () => {
+            completed = true;
+            tokenData.used = true;
+            console.log(`PDF downloaded: Token ${token.substring(0, 8)}...`);
+        });
+
+        res.on('close', () => {
+            if (!completed) {
+                // download interrupted, allow retry
+                tokenData.used = false;
+                console.warn(`Download interrupted for token ${token.substring(0, 8)}..., allowing retry`);
+            }
+        });
     } catch (error) {
         console.error('Error downloading PDF:', error);
         res.status(500).json({
