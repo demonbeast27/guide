@@ -3,6 +3,7 @@ const path = require('path');
 const crypto = require('crypto');
 const fs = require('fs');
 const Razorpay = require('razorpay');
+const cors = require('cors');
 require('dotenv').config();
 
 const app = express();
@@ -21,6 +22,7 @@ const razorpay = new Razorpay({
 });
 
 // Middleware
+app.use(cors()); // allow cross-origin (frontend hosted elsewhere)
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static('public'));
