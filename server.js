@@ -63,10 +63,9 @@ app.get('/', (req, res) => {
 // Create Razorpay order (supports GPay/UPI)
 app.post('/api/create-order', async (req, res) => {
     try {
-        const amount = 19900; // ₹199 in paise
-        
+        const amount = 19900;
         const options = {
-            amount: amount,
+            amount,
             currency: 'INR',
             receipt: `order_${Date.now()}`,
             notes: {
@@ -76,26 +75,17 @@ app.post('/api/create-order', async (req, res) => {
         };
 
         const order = await razorpay.orders.create(options);
-        
-        // Store order
+
         orders.set(order.id, {
             amount: order.amount,
             createdAt: new Date()
         });
-        
-        res.json({
-            success: true,
-            orderId: order.id,
-            amount: order.amount,
-            currency: order.currency,
-            key: process.env.RAZORPAY_KEY_ID || razorpay.key_id
-        });
+
+        res.json({ id: order.id, amount: order.amount, currency: order.currency });
     } catch (error) {
         console.error('Error creating Razorpay order:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Failed to create order. Please try again.'
-        });
+        console.log('Razorpay create-order error:', error && error.message);
+        res.status(500).json({ message: 'Failed to create order' });
     }
 });
 
@@ -357,7 +347,6 @@ app.listen(PORT, () => {
         console.log('✅ Razorpay configured');
     }
 });
-
 
 
 

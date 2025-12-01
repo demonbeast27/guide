@@ -23,6 +23,7 @@ function toggleQR() {
 }
 
 const API_BASE = 'https://guide-backend-2v7j.onrender.com';
+const RAZORPAY_KEY_ID = 'rzp_live_RklZm6xcXA1csN';
 
 async function initiatePayment() {
     const btn = document.getElementById('buy-now-btn');
@@ -38,23 +39,22 @@ async function initiatePayment() {
         });
 
         const orderData = await orderResponse.json();
-        if (!orderData.success) {
-            throw new Error(orderData.message || 'Unable to create order');
+        if (!orderData || !orderData.id) {
+            throw new Error('Missing order_id');
+        }
+        if (!orderData.amount || orderData.amount < 100) {
+            throw new Error('Invalid amount');
         }
 
         const options = {
-            key: orderData.key,
+            key: RAZORPAY_KEY_ID,
             amount: orderData.amount,
-            currency: 'INR',
+            currency: orderData.currency,
             name: 'PDF Purchase',
             description: 'Digital Download',
-            order_id: orderData.orderId,
-            method: {
-                upi: true
-            },
-            upi: {
-                flow: 'intent'
-            },
+            order_id: orderData.id,
+            methods: { upi: 1 },
+            upi: { mode: 'intent', flow: 'intent' },
             handler: verifyPayment,
             modal: {
                 ondismiss: function () {
