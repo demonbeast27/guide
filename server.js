@@ -7,7 +7,8 @@ const cors = require('cors');
 require('dotenv').config();
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+// Use Render-assigned PORT if present, otherwise default to 10000
+const PORT = process.env.PORT || 10000;
 
 // Initialize Razorpay (supports GPay, PhonePe, Paytm, and all UPI apps)
 const { RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET } = process.env;
@@ -269,105 +270,9 @@ app.get('/api/health', (req, res) => {
     res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
-// Start server
-app.listen(PORT, () => {
-    console.log(`Server running on http://localhost:${PORT}`);
-    console.log('Make sure to place your PDF file in the files/ directory');
-    
-    // Check if Razorpay keys are configured
-    if (!process.env.RAZORPAY_KEY_ID || process.env.RAZORPAY_KEY_ID === 'rzp_test_1234567890') {
-        console.warn('\n⚠️  WARNING: Razorpay keys not configured!');
-        console.warn('Please set RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET in .env file');
-        console.warn('Get keys from: https://dashboard.razorpay.com/app/keys\n');
-    } else {
-        console.log('✅ Razorpay configured');
-    }
-});
-
-app.get('/api/health', (req, res) => {
-    res.json({ status: 'ok', timestamp: new Date().toISOString() });
-});
-
-// Start server
-app.listen(PORT, () => {
-    console.log(`Server running on http://localhost:${PORT}`);
-    console.log('Make sure to place your PDF file in the files/ directory');
-    
-    // Check if Razorpay keys are configured
-    if (!process.env.RAZORPAY_KEY_ID || process.env.RAZORPAY_KEY_ID === 'rzp_test_1234567890') {
-        console.warn('\n⚠️  WARNING: Razorpay keys not configured!');
-        console.warn('Please set RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET in .env file');
-        console.warn('Get keys from: https://dashboard.razorpay.com/app/keys\n');
-    } else {
-        console.log('✅ Razorpay configured');
-    }
-});
-
-app.get('/api/health', (req, res) => {
-    res.json({ status: 'ok', timestamp: new Date().toISOString() });
-});
-
-// Start server
-app.listen(PORT, () => {
-    console.log(`Server running on http://localhost:${PORT}`);
-    console.log('Make sure to place your PDF file in the files/ directory');
-    
-    // Check if Razorpay keys are configured
-    if (!process.env.RAZORPAY_KEY_ID || process.env.RAZORPAY_KEY_ID === 'rzp_test_1234567890') {
-        console.warn('\n⚠️  WARNING: Razorpay keys not configured!');
-        console.warn('Please set RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET in .env file');
-        console.warn('Get keys from: https://dashboard.razorpay.com/app/keys\n');
-    } else {
-        console.log('✅ Razorpay configured');
-    }
-});
-
-
-app.get('/api/health', (req, res) => {
-    res.json({ status: 'ok', timestamp: new Date().toISOString() });
-});
-
-// Start server
-app.listen(PORT, () => {
-    console.log(`Server running on http://localhost:${PORT}`);
-    console.log('Make sure to place your PDF file in the files/ directory');
-    
-    // Check if Razorpay keys are configured
-    if (!process.env.RAZORPAY_KEY_ID || process.env.RAZORPAY_KEY_ID === 'rzp_test_1234567890') {
-        console.warn('\n⚠️  WARNING: Razorpay keys not configured!');
-        console.warn('Please set RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET in .env file');
-        console.warn('Get keys from: https://dashboard.razorpay.com/app/keys\n');
-    } else {
-        console.log('✅ Razorpay configured');
-    }
-});
-
-app.get('/api/health', (req, res) => {
-    res.json({ status: 'ok', timestamp: new Date().toISOString() });
-});
-
-// Start server
-app.listen(PORT, () => {
-    console.log(`Server running on http://localhost:${PORT}`);
-    console.log('Make sure to place your PDF file in the files/ directory');
-    
-    // Check if Razorpay keys are configured
-    if (!process.env.RAZORPAY_KEY_ID || process.env.RAZORPAY_KEY_ID === 'rzp_test_1234567890') {
-        console.warn('\n⚠️  WARNING: Razorpay keys not configured!');
-        console.warn('Please set RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET in .env file');
-        console.warn('Get keys from: https://dashboard.razorpay.com/app/keys\n');
-    } else {
-        console.log('✅ Razorpay configured');
-    }
-});
-// Health check
-app.get('/api/health', (req, res) => {
-    res.json({ status: 'ok', timestamp: new Date().toISOString() });
-});
-
 // Start server (single listener)
 app.listen(PORT, () => {
-    console.log(`Server running on http://localhost:${PORT}`);
+    console.log(`Server running on port ${PORT}`);
     console.log('Make sure to place your PDF file in the files/ directory');
     
     // Check if Razorpay keys are configured
