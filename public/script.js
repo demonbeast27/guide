@@ -87,6 +87,7 @@ async function verifyPayment(response) {
     try {
         btn.disabled = true;
 
+        // Always send to backend; frontend does not decide success/failure
         const verifyRes = await fetch(`${API_BASE}/api/verify-payment`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -94,12 +95,36 @@ async function verifyPayment(response) {
         });
 
         const verifyData = await verifyRes.json();
-        if (!verifyData.success) {
-            throw new Error(verifyData.message || 'Payment verification failed.');
+
+        if (verifyData.success && verifyData.downloadToken) {
+            // Backend says payment is captured/authorized and token is ready
+            showDownloadSection(verifyData.downloadToken, true);
+            showMessage('Payment successful! Your download is ready.', 'success');
+            btn.disabled = false;
+            btn.innerHTML = originalText;
+            return;
         }
 
-        showDownloadSection(verifyData.downloadToken, true);
-        showMessage('Payment successful! Your download is ready.', 'success');
+        // If not yet captured, retry once after 2 seconds by checking status from backend
+        setTimeout(async () => {
+            try {
+                const statusRes = await fetch(`${API_BASE}/api/check-status?payment_id=${encodeURIComponent(response.razorpay_payment_id)}`);
+                const statusData = await statusRes.json();
+
+                if (statusData.success && statusData.downloadToken && statusData.status === 'captured') {
+                    showDownloadSection(statusData.downloadToken, true);
+                    showMessage('Payment successful! Your download is ready.', 'success');
+                } else {
+                    showMessage('Payment not completed. If money is debited, please contact support with your payment ID.', 'error');
+                }
+            } catch (err) {
+                console.error(err);
+                showMessage('Could not confirm payment status. Please contact support with your payment ID.', 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+            }
+        }, 2000);
 
     } catch (error) {
         console.error(error);

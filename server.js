@@ -125,53 +125,60 @@ app.post('/api/verify-payment', async (req, res) => {
             });
         }
 
-        // Verify payment with Razorpay API
+        // Verify payment with Razorpay API (backend is source of truth)
         try {
             const payment = await razorpay.payments.fetch(razorpay_payment_id);
-            
-            if (payment.status !== 'authorized' && payment.status !== 'captured') {
-                return res.status(400).json({
-                    success: false,
-                    message: 'Payment not successful'
+
+            // If already captured/authorized, create or reuse token
+            if (payment.status === 'captured' || payment.status === 'authorized') {
+                // Check if payment already processed
+                const existingToken = Array.from(downloadTokens.entries()).find(
+                    ([token, data]) => data.paymentId === razorpay_payment_id
+                );
+
+                if (existingToken) {
+                    return res.json({
+                        success: true,
+                        status: payment.status,
+                        downloadToken: existingToken[0],
+                        message: 'Payment already verified'
+                    });
+                }
+
+                // Generate one-time download token
+                const downloadToken = generateDownloadToken();
+                
+                // Store download token
+                downloadTokens.set(downloadToken, {
+                    used: false,
+                    createdAt: new Date(),
+                    paymentId: razorpay_payment_id,
+                    orderId: razorpay_order_id,
+                    amount: payment.amount / 100 // Convert paise to rupees
                 });
-            }
 
-            // Check if payment already processed
-            const existingToken = Array.from(downloadTokens.entries()).find(
-                ([token, data]) => data.paymentId === razorpay_payment_id
-            );
+                console.log(`Payment verified: ${razorpay_payment_id} - Amount: ₹${payment.amount / 100} - Method: ${payment.method}`);
 
-            if (existingToken) {
                 return res.json({
                     success: true,
-                    downloadToken: existingToken[0],
-                    message: 'Payment already verified'
+                    status: payment.status,
+                    downloadToken: downloadToken,
+                    message: 'Payment verified successfully'
                 });
             }
 
-            // Generate one-time download token
-            const downloadToken = generateDownloadToken();
-            
-            // Store download token
-            downloadTokens.set(downloadToken, {
-                used: false,
-                createdAt: new Date(),
-                paymentId: razorpay_payment_id,
-                orderId: razorpay_order_id,
-                amount: payment.amount / 100 // Convert paise to rupees
-            });
-
-            console.log(`Payment verified: ${razorpay_payment_id} - Amount: ₹${payment.amount / 100} - Method: ${payment.method}`);
-
-            res.json({
-                success: true,
-                downloadToken: downloadToken,
-                message: 'Payment verified successfully'
+            // Not yet captured/authorized – return status but no token.
+            console.warn(`Payment pending/not captured yet: ${razorpay_payment_id} - Status: ${payment.status}`);
+            return res.json({
+                success: false,
+                status: payment.status,
+                message: 'Payment not completed yet'
             });
         } catch (error) {
             console.error('Error verifying payment with Razorpay:', error);
             return res.status(500).json({
                 success: false,
+                status: 'error',
                 message: 'Error verifying payment with payment gateway'
             });
         }
@@ -264,6 +271,70 @@ app.get('/api/download/:token', (req, res) => {
     }
 });
 
+
+// Check payment status and issue/download token if captured
+app.get('/api/check-status', async (req, res) => {
+    const { payment_id } = req.query;
+
+    if (!payment_id) {
+        return res.status(400).json({
+            success: false,
+            status: 'error',
+            message: 'payment_id is required'
+        });
+    }
+
+    try {
+        const payment = await razorpay.payments.fetch(payment_id);
+
+        if (payment.status === 'captured' || payment.status === 'authorized') {
+            // Try to find existing token for this payment
+            const existingToken = Array.from(downloadTokens.entries()).find(
+                ([token, data]) => data.paymentId === payment_id
+            );
+
+            if (existingToken) {
+                return res.json({
+                    success: true,
+                    status: payment.status,
+                    downloadToken: existingToken[0]
+                });
+            }
+
+            // No token yet – create a new one
+            const downloadToken = generateDownloadToken();
+            downloadTokens.set(downloadToken, {
+                used: false,
+                createdAt: new Date(),
+                paymentId: payment_id,
+                orderId: payment.order_id,
+                amount: payment.amount / 100
+            });
+
+            console.log(`Payment captured on recheck: ${payment_id} - Amount: ₹${payment.amount / 100}`);
+
+            return res.json({
+                success: true,
+                status: payment.status,
+                downloadToken
+            });
+        }
+
+        // Still not captured
+        return res.json({
+            success: false,
+            status: payment.status,
+            message: 'Payment not captured'
+        });
+    } catch (error) {
+        console.error('Error checking payment status:', error);
+        return res.status(500).json({
+            success: false,
+            status: 'error',
+            message: 'Error checking payment status'
+        });
+    }
+});
 
 // Health check
 app.get('/api/health', (req, res) => {
