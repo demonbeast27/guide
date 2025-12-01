@@ -55,10 +55,10 @@ async function initiatePayment() {
             order_id: orderData.id,
             methods: { upi: 1 },
             upi: { mode: 'intent', flow: 'intent' },
-            handler: verifyPayment,
+            redirect: true,
+            callback_url: `${API_BASE}/download-pdf`,
             modal: {
                 ondismiss: function () {
-                    alert('Payment cancelled.');
                     btn.disabled = false;
                     btn.innerHTML = originalText;
                 }
@@ -78,38 +78,7 @@ async function initiatePayment() {
     }
 }
 
-function verifyPayment(response) {
-    console.log('Rzp Response:', response);
-
-    fetch(`${API_BASE}/api/verify-payment`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(response)
-    })
-    .then(res => res.json())
-    .then(data => {
-        if (data.status === 'captured') {
-            window.location.href = `${API_BASE}/download-pdf`;
-        } else {
-            // Retry after 2 seconds because UPI callbacks are delayed
-            setTimeout(() => {
-                fetch(`${API_BASE}/api/check-status?payment_id=${encodeURIComponent(response.razorpay_payment_id)}`)
-                    .then(r => r.json())
-                    .then(s => {
-                        if (s.status === 'captured') {
-                            window.location.href = `${API_BASE}/download-pdf`;
-                        } else {
-                            alert('Payment not completed.');
-                        }
-                    });
-            }, 2000);
-        }
-    })
-    .catch(error => {
-        console.error('Verification error:', error);
-        alert('Payment verification failed. Please contact support with your payment ID.');
-    });
-}
+// Using Razorpay redirect + callback_url; no frontend verification or confirmations
 
 function showMessage(text, type = 'error') {
     const messageEl = document.getElementById('message');
