@@ -49,16 +49,16 @@ async function initiatePayment() {
             name: 'PDF Purchase',
             description: 'Digital Download',
             order_id: orderData.orderId,
-            timeout: 0,
-            method: 'upi',
+            method: {
+                upi: true
+            },
             upi: {
-                flow: 'intent',
-                provider: 'google_pay'
+                flow: 'intent'
             },
             handler: verifyPayment,
             modal: {
                 ondismiss: function () {
-                    alert('Payment cancelled');
+                    alert('Payment cancelled.');
                     btn.disabled = false;
                     btn.innerHTML = originalText;
                 }
