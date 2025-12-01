@@ -45,23 +45,20 @@ async function initiatePayment() {
         const options = {
             key: orderData.key,
             amount: orderData.amount,
-            currency: orderData.currency,
-            name: '20 Laws of Feminine Power',
-            description: 'Complete PDF Guide',
+            currency: 'INR',
+            name: 'PDF Purchase',
+            description: 'Digital Download',
             order_id: orderData.orderId,
-            // Force UPI intent flow so GPay/UPI apps open directly
+            timeout: 0,
             method: 'upi',
             upi: {
-                flow: 'intent'
+                flow: 'intent',
+                provider: 'google_pay'
             },
             handler: verifyPayment,
-            notes: {
-                product: '20 Laws of Feminine Power',
-                upi: 'risthishende5@oksbi'
-            },
-            theme: { color: '#5d4037' },
             modal: {
-                ondismiss: () => {
+                ondismiss: function () {
+                    alert('Payment cancelled');
                     btn.disabled = false;
                     btn.innerHTML = originalText;
                 }
@@ -81,57 +78,37 @@ async function initiatePayment() {
     }
 }
 
-async function verifyPayment(response) {
-    const btn = document.getElementById('buy-now-btn');
-    const originalText = btn.innerHTML;
-    try {
-        btn.disabled = true;
+function verifyPayment(response) {
+    console.log('Rzp Response:', response);
 
-        // Always send to backend; frontend does not decide success/failure
-        const verifyRes = await fetch(`${API_BASE}/api/verify-payment`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(response)
-        });
-
-        const verifyData = await verifyRes.json();
-
-        if (verifyData.success && verifyData.downloadToken) {
-            // Backend says payment is captured/authorized and token is ready
-            showDownloadSection(verifyData.downloadToken, true);
-            showMessage('Payment successful! Your download is ready.', 'success');
-            btn.disabled = false;
-            btn.innerHTML = originalText;
-            return;
+    fetch(`${API_BASE}/api/verify-payment`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(response)
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.status === 'captured') {
+            window.location.href = `${API_BASE}/download-pdf`;
+        } else {
+            // Retry after 2 seconds because UPI callbacks are delayed
+            setTimeout(() => {
+                fetch(`${API_BASE}/api/check-status?payment_id=${encodeURIComponent(response.razorpay_payment_id)}`)
+                    .then(r => r.json())
+                    .then(s => {
+                        if (s.status === 'captured') {
+                            window.location.href = `${API_BASE}/download-pdf`;
+                        } else {
+                            alert('Payment not completed.');
+                        }
+                    });
+            }, 2000);
         }
-
-        // If not yet captured, retry once after 2 seconds by checking status from backend
-        setTimeout(async () => {
-            try {
-                const statusRes = await fetch(`${API_BASE}/api/check-status?payment_id=${encodeURIComponent(response.razorpay_payment_id)}`);
-                const statusData = await statusRes.json();
-
-                if (statusData.success && statusData.downloadToken && statusData.status === 'captured') {
-                    showDownloadSection(statusData.downloadToken, true);
-                    showMessage('Payment successful! Your download is ready.', 'success');
-                } else {
-                    showMessage('Payment not completed. If money is debited, please contact support with your payment ID.', 'error');
-                }
-            } catch (err) {
-                console.error(err);
-                showMessage('Could not confirm payment status. Please contact support with your payment ID.', 'error');
-            } finally {
-                btn.disabled = false;
-                btn.innerHTML = originalText;
-            }
-        }, 2000);
-
-    } catch (error) {
-        console.error(error);
-        showMessage(error.message || 'Verification failed. Contact support with your payment ID.', 'error');
-        btn.disabled = false;
-        btn.innerHTML = originalText;
-    }
+    })
+    .catch(error => {
+        console.error('Verification error:', error);
+        alert('Payment verification failed. Please contact support with your payment ID.');
+    });
 }
 
 function showMessage(text, type = 'error') {

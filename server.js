@@ -7,8 +7,8 @@ const cors = require('cors');
 require('dotenv').config();
 
 const app = express();
-// Use Render-assigned PORT if present, otherwise default to 10000
-const PORT = process.env.PORT || 10000;
+// Use Render-assigned PORT if present, otherwise default to 3000
+const PORT = process.env.PORT || 3000;
 
 // Initialize Razorpay (supports GPay, PhonePe, Paytm, and all UPI apps)
 const { RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET } = process.env;
@@ -111,26 +111,27 @@ app.post('/api/verify-payment', async (req, res) => {
             });
         }
 
-        // Verify signature
+        // Verify signature using HMAC SHA256
         const text = `${razorpay_order_id}|${razorpay_payment_id}`;
         const generatedSignature = crypto
-            .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET || razorpay.key_secret)
+            .createHmac('sha256', RAZORPAY_KEY_SECRET)
             .update(text)
             .digest('hex');
 
         if (generatedSignature !== razorpay_signature) {
             return res.status(400).json({
                 success: false,
+                status: 'error',
                 message: 'Invalid payment signature'
             });
         }
 
-        // Verify payment with Razorpay API (backend is source of truth)
+        // Fetch payment status from Razorpay API (backend is source of truth)
         try {
             const payment = await razorpay.payments.fetch(razorpay_payment_id);
 
-            // If already captured/authorized, create or reuse token
-            if (payment.status === 'captured' || payment.status === 'authorized') {
+            // ONLY respond with success when status === "captured"
+            if (payment.status === 'captured') {
                 // Check if payment already processed
                 const existingToken = Array.from(downloadTokens.entries()).find(
                     ([token, data]) => data.paymentId === razorpay_payment_id
@@ -139,9 +140,8 @@ app.post('/api/verify-payment', async (req, res) => {
                 if (existingToken) {
                     return res.json({
                         success: true,
-                        status: payment.status,
-                        downloadToken: existingToken[0],
-                        message: 'Payment already verified'
+                        status: 'captured',
+                        downloadToken: existingToken[0]
                     });
                 }
 
@@ -154,21 +154,20 @@ app.post('/api/verify-payment', async (req, res) => {
                     createdAt: new Date(),
                     paymentId: razorpay_payment_id,
                     orderId: razorpay_order_id,
-                    amount: payment.amount / 100 // Convert paise to rupees
+                    amount: payment.amount / 100
                 });
 
                 console.log(`Payment verified: ${razorpay_payment_id} - Amount: ₹${payment.amount / 100} - Method: ${payment.method}`);
 
                 return res.json({
                     success: true,
-                    status: payment.status,
-                    downloadToken: downloadToken,
-                    message: 'Payment verified successfully'
+                    status: 'captured',
+                    downloadToken: downloadToken
                 });
             }
 
-            // Not yet captured/authorized – return status but no token.
-            console.warn(`Payment pending/not captured yet: ${razorpay_payment_id} - Status: ${payment.status}`);
+            // Not yet captured – return status but no success
+            console.warn(`Payment not captured yet: ${razorpay_payment_id} - Status: ${payment.status}`);
             return res.json({
                 success: false,
                 status: payment.status,
@@ -282,6 +281,31 @@ app.get('/download', (req, res) => {
     res.sendFile(filePath);
 });
 
+// PDF download route for payment success redirect
+app.get('/download-pdf', (req, res) => {
+    const filePath = path.join(__dirname, 'files', '20 laws of feminine power complete guide.pdf');
+
+    if (!fs.existsSync(filePath)) {
+        return res.status(404).json({
+            success: false,
+            message: 'PDF file not found'
+        });
+    }
+
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', 'attachment; filename=20-Laws-of-Feminine-Power-Guide.pdf');
+
+    res.download(filePath, '20-Laws-of-Feminine-Power-Guide.pdf', (err) => {
+        if (err) {
+            console.error('Error downloading PDF:', err);
+            res.status(500).json({
+                success: false,
+                message: 'Error downloading file'
+            });
+        }
+    });
+});
+
 
 // Check payment status and issue/download token if captured
 app.get('/api/check-status', async (req, res) => {
@@ -298,44 +322,11 @@ app.get('/api/check-status', async (req, res) => {
     try {
         const payment = await razorpay.payments.fetch(payment_id);
 
-        if (payment.status === 'captured' || payment.status === 'authorized') {
-            // Try to find existing token for this payment
-            const existingToken = Array.from(downloadTokens.entries()).find(
-                ([token, data]) => data.paymentId === payment_id
-            );
-
-            if (existingToken) {
-                return res.json({
-                    success: true,
-                    status: payment.status,
-                    downloadToken: existingToken[0]
-                });
-            }
-
-            // No token yet – create a new one
-            const downloadToken = generateDownloadToken();
-            downloadTokens.set(downloadToken, {
-                used: false,
-                createdAt: new Date(),
-                paymentId: payment_id,
-                orderId: payment.order_id,
-                amount: payment.amount / 100
-            });
-
-            console.log(`Payment captured on recheck: ${payment_id} - Amount: ₹${payment.amount / 100}`);
-
-            return res.json({
-                success: true,
-                status: payment.status,
-                downloadToken
-            });
-        }
-
-        // Still not captured
+        // Return the actual status (captured/failed/pending)
         return res.json({
-            success: false,
+            success: payment.status === 'captured',
             status: payment.status,
-            message: 'Payment not captured'
+            message: payment.status === 'captured' ? 'Payment captured' : `Payment status: ${payment.status}`
         });
     } catch (error) {
         console.error('Error checking payment status:', error);
