@@ -272,6 +272,17 @@ app.get('/api/download/:token', (req, res) => {
 });
 
 
+// Direct PDF download route (production)
+app.get('/download', (req, res) => {
+    const filePath = __dirname + '/files/20 laws of feminine power complete guide.pdf';
+
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', 'attachment; filename=Book.pdf');
+
+    res.sendFile(filePath);
+});
+
+
 // Check payment status and issue/download token if captured
 app.get('/api/check-status', async (req, res) => {
     const { payment_id } = req.query;
