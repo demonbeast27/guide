@@ -30,7 +30,6 @@ app.use(express.static('public'));
 // In-memory store for download tokens and orders
 // In production, use a database (MongoDB, PostgreSQL, etc.)
 const downloadTokens = new Map(); // downloadToken -> { used: false, createdAt: Date }
-const usedTransactions = new Set(); // Track used transaction IDs to prevent reuse
 const orders = new Map(); // orderId -> { amount, createdAt }
 
 // Generate secure random token
@@ -184,73 +183,6 @@ app.post('/api/verify-payment', async (req, res) => {
     }
 });
 
-// Verify transaction and generate download link
-app.post('/api/verify-transaction', (req, res) => {
-    try {
-        const { transactionId, amount } = req.body;
-
-        if (!transactionId || !transactionId.trim()) {
-            return res.status(400).json({
-                success: false,
-                message: 'Transaction ID is required'
-            });
-        }
-
-        const txIdTrimmed = transactionId.trim();
-        const txIdUpper = txIdTrimmed.toUpperCase();
-
-        // Validate transaction ID format
-        // UPI transaction IDs are typically alphanumeric, 6-30 characters
-        // Can contain numbers, letters, and sometimes special characters
-        const txIdRegex = /^[A-Za-z0-9]{6,30}$/;
-        
-        if (!txIdRegex.test(txIdTrimmed)) {
-            return res.status(400).json({
-                success: false,
-                message: 'Invalid Transaction ID format. Please enter a valid UPI Transaction ID (6-30 alphanumeric characters).'
-            });
-        }
-
-        // Check if this transaction ID was already used
-        if (usedTransactions.has(txIdUpper)) {
-            return res.status(400).json({
-                success: false,
-                message: 'This Transaction ID has already been used. Each payment can only be used once.'
-            });
-        }
-
-        // Mark transaction as used
-        usedTransactions.add(txIdUpper);
-        
-        // Log the transaction for verification
-        console.log(`Payment received - Transaction ID: ${txIdTrimmed}, Amount: ₹${amount || 199}, UPI: risthishende5@oksbi`);
-
-        // Generate one-time download token
-        const downloadToken = generateDownloadToken();
-        
-        // Store download token (24 hour expiry)
-        downloadTokens.set(downloadToken, {
-            used: false,
-            createdAt: new Date(),
-            transactionId: transactionId.trim()
-        });
-
-        console.log(`Transaction verified: ${transactionId.substring(0, 6)}... - Token generated`);
-
-        res.json({
-            success: true,
-            downloadToken: downloadToken,
-            message: 'Transaction verified successfully'
-        });
-    } catch (error) {
-        console.error('Error verifying transaction:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Server error during verification'
-        });
-    }
-});
-
 // Download PDF (protected route)
 app.get('/api/download/:token', (req, res) => {
     try {
@@ -288,35 +220,16 @@ app.get('/api/download/:token', (req, res) => {
             });
         }
 
-        // Get PDF file path - try expected name first, then find any PDF file
-        let pdfPath = path.join(__dirname, 'files', '20 laws of feminine power complete guide.pdf');
-        
-        // If expected file doesn't exist, find any PDF file in the directory
+        // Get PDF file path (make sure this matches the actual filename in the files/ directory)
+        const pdfPath = path.join(__dirname, 'files', '20 laws of feminine power complete guide.pdf');
+
+        // Check if PDF exists
         if (!fs.existsSync(pdfPath)) {
-            console.warn('Expected PDF file not found, searching for any PDF file...');
-            const filesDir = path.join(__dirname, 'files');
-            if (fs.existsSync(filesDir)) {
-                const files = fs.readdirSync(filesDir);
-                const pdfFiles = files.filter(file => file.toLowerCase().endsWith('.pdf'));
-                
-                if (pdfFiles.length > 0) {
-                    // Use the first PDF file found
-                    pdfPath = path.join(filesDir, pdfFiles[0]);
-                    console.log(`Using PDF file: ${pdfFiles[0]}`);
-                } else {
-                    console.error('No PDF files found in files directory');
-                    return res.status(404).json({
-                        success: false,
-                        message: 'PDF file not found. Please ensure a PDF file is placed in the files/ directory.'
-                    });
-                }
-            } else {
-                console.error('Files directory does not exist');
-                return res.status(404).json({
-                    success: false,
-                    message: 'PDF file directory not found.'
-                });
-            }
+            console.error('PDF file not found at:', pdfPath);
+            return res.status(404).json({
+                success: false,
+                message: 'PDF file not found. Please ensure the PDF file is placed in the files/ directory with the name: 20 laws of feminine power complete guide.pdf'
+            });
         }
 
         // Send PDF file
@@ -361,12 +274,93 @@ app.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
     console.log('Make sure to place your PDF file in the files/ directory');
     
-    // Razorpay configuration status
-    if (process.env.RAZORPAY_KEY_ID && process.env.RAZORPAY_KEY_ID.startsWith('rzp_live_')) {
-        console.log('✅ Razorpay Live mode configured');
-    } else {
-        console.warn('\n⚠️  WARNING: Razorpay keys not properly configured!');
+    // Check if Razorpay keys are configured
+    if (!process.env.RAZORPAY_KEY_ID || process.env.RAZORPAY_KEY_ID === 'rzp_test_1234567890') {
+        console.warn('\n⚠️  WARNING: Razorpay keys not configured!');
         console.warn('Please set RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET in .env file');
         console.warn('Get keys from: https://dashboard.razorpay.com/app/keys\n');
+    } else {
+        console.log('✅ Razorpay configured');
     }
 });
+
+app.get('/api/health', (req, res) => {
+    res.json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
+// Start server
+app.listen(PORT, () => {
+    console.log(`Server running on http://localhost:${PORT}`);
+    console.log('Make sure to place your PDF file in the files/ directory');
+    
+    // Check if Razorpay keys are configured
+    if (!process.env.RAZORPAY_KEY_ID || process.env.RAZORPAY_KEY_ID === 'rzp_test_1234567890') {
+        console.warn('\n⚠️  WARNING: Razorpay keys not configured!');
+        console.warn('Please set RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET in .env file');
+        console.warn('Get keys from: https://dashboard.razorpay.com/app/keys\n');
+    } else {
+        console.log('✅ Razorpay configured');
+    }
+});
+
+app.get('/api/health', (req, res) => {
+    res.json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
+// Start server
+app.listen(PORT, () => {
+    console.log(`Server running on http://localhost:${PORT}`);
+    console.log('Make sure to place your PDF file in the files/ directory');
+    
+    // Check if Razorpay keys are configured
+    if (!process.env.RAZORPAY_KEY_ID || process.env.RAZORPAY_KEY_ID === 'rzp_test_1234567890') {
+        console.warn('\n⚠️  WARNING: Razorpay keys not configured!');
+        console.warn('Please set RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET in .env file');
+        console.warn('Get keys from: https://dashboard.razorpay.com/app/keys\n');
+    } else {
+        console.log('✅ Razorpay configured');
+    }
+});
+
+
+app.get('/api/health', (req, res) => {
+    res.json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
+// Start server
+app.listen(PORT, () => {
+    console.log(`Server running on http://localhost:${PORT}`);
+    console.log('Make sure to place your PDF file in the files/ directory');
+    
+    // Check if Razorpay keys are configured
+    if (!process.env.RAZORPAY_KEY_ID || process.env.RAZORPAY_KEY_ID === 'rzp_test_1234567890') {
+        console.warn('\n⚠️  WARNING: Razorpay keys not configured!');
+        console.warn('Please set RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET in .env file');
+        console.warn('Get keys from: https://dashboard.razorpay.com/app/keys\n');
+    } else {
+        console.log('✅ Razorpay configured');
+    }
+});
+
+app.get('/api/health', (req, res) => {
+    res.json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
+// Start server
+app.listen(PORT, () => {
+    console.log(`Server running on http://localhost:${PORT}`);
+    console.log('Make sure to place your PDF file in the files/ directory');
+    
+    // Check if Razorpay keys are configured
+    if (!process.env.RAZORPAY_KEY_ID || process.env.RAZORPAY_KEY_ID === 'rzp_test_1234567890') {
+        console.warn('\n⚠️  WARNING: Razorpay keys not configured!');
+        console.warn('Please set RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET in .env file');
+        console.warn('Get keys from: https://dashboard.razorpay.com/app/keys\n');
+    } else {
+        console.log('✅ Razorpay configured');
+    }
+});
+
+
+
+
