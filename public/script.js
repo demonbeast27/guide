@@ -56,7 +56,7 @@ async function initiatePayment() {
             methods: { upi: 1 },
             upi: { mode: 'intent', flow: 'intent' },
             redirect: true,
-            callback_url: `${API_BASE}/download-pdf`,
+            callback_url: `${API_BASE}/`,
             modal: {
                 ondismiss: function () {
                     btn.disabled = false;
@@ -87,25 +87,6 @@ function showMessage(text, type = 'error') {
     setTimeout(() => messageEl.classList.remove('active'), 5000);
 }
 
-function showDownloadSection(downloadToken, autoDownload = false) {
-    const downloadSection = document.getElementById('download-section');
-    const downloadLink = document.getElementById('download-link');
-    const downloadUrl = `${API_BASE}/api/download/${downloadToken}`;
-    downloadLink.href = downloadUrl;
-    downloadSection.classList.add('active');
-    setTimeout(() => downloadSection.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
-    const buyBtn = document.getElementById('buy-now-btn');
-    if (buyBtn) buyBtn.style.display = 'none';
-
-    if (autoDownload) {
-        // Initiate PDF download automatically without extra click
-        const tempLink = document.createElement('a');
-        tempLink.href = downloadUrl;
-        tempLink.download = '20-Laws-of-Feminine-Power-Guide.pdf';
-        document.body.appendChild(tempLink);
-        tempLink.click();
-        document.body.removeChild(tempLink);
-    }
-}
+// Auto-download handled entirely by backend redirect now
 
 
