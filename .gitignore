@@ -4,5 +4,6 @@ node_modules/
 *.log
 files/*.pdf
 !files/README.md
+!files/20 laws of feminine power complete guide.pdf
 
 
