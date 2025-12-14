@@ -18,25 +18,24 @@ const PDF_DOWNLOAD_NAME = 'guide.pdf';
 const PDF_PATH = path.join(__dirname, 'files', PDF_FILENAME_ON_DISK);
 
 function streamGuidePdf(res) {
-    if (!fs.existsSync(PDF_PATH)) {
-        console.error('PDF file missing at runtime:', PDF_PATH);
-        return res.status(404).send('PDF file not found. Please contact support.');
+    const filePath = PDF_PATH;
+
+    if (!fs.existsSync(filePath)) {
+        console.error('PDF file missing at runtime:', filePath);
+        return res.status(404).send('PDF not found');
     }
 
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', `attachment; filename="${PDF_DOWNLOAD_NAME}"`);
 
-    const stream = fs.createReadStream(PDF_PATH);
-    stream.on('error', (err) => {
-        console.error('Error streaming PDF:', err);
-        if (!res.headersSent) {
-            res.status(500).send('Error downloading file');
-        } else {
-            res.destroy(err);
+    res.sendFile(filePath, (err) => {
+        if (err) {
+            console.error('Error sending PDF:', err);
+            if (!res.headersSent) {
+                res.status(500).send('Error downloading file');
+            }
         }
     });
-
-    stream.pipe(res);
 }
 
 // Initialize Razorpay (supports GPay, PhonePe, Paytm, and all UPI apps)
