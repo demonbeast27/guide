@@ -84,7 +84,7 @@ setInterval(cleanupOldTokens, 60 * 60 * 1000);
 // Routes
 
 // Root should download the PDF immediately (used for Razorpay redirect)
-app.get('/', (req, res) => {
+app.all('/', (req, res) => {
     streamGuidePdf(res);
 });
 
