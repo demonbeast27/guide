@@ -76,11 +76,24 @@
 
         /* Price */
         .price {
+            display: flex;
+            align-items: baseline;
+            justify-content: center;
+            gap: 0.75rem;
+            margin: 1rem 0 1.5rem;
+        }
+
+        .price-original {
+            font-size: clamp(1.1rem, 3vw, 1.4rem);
+            color: var(--text-light);
+            text-decoration: line-through;
+            opacity: 0.8;
+        }
+
+        .price-sale {
             font-size: clamp(2rem, 6vw, 2.8rem);
             color: var(--dark-brown);
             font-weight: 600;
-            text-align: center;
-            margin: 1rem 0 1.5rem;
         }
 
         /* Description */
@@ -417,7 +430,10 @@
         <h1 class="product-title">20 Laws of Feminine Power – Complete PDF Guide</h1>
 
         <!-- Price -->
-        <div class="price">₹199</div>
+        <div class="price">
+            <span class="price-original">₹399</span>
+            <span class="price-sale">₹199</span>
+        </div>
 
         <!-- Description -->
         <div class="description">
