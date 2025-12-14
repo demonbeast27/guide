@@ -17,6 +17,28 @@ const PDF_FILENAME_ON_DISK = '20 laws of feminine power complete guide.pdf';
 const PDF_DOWNLOAD_NAME = 'guide.pdf';
 const PDF_PATH = path.join(__dirname, 'files', PDF_FILENAME_ON_DISK);
 
+function streamGuidePdf(res) {
+    if (!fs.existsSync(PDF_PATH)) {
+        console.error('PDF file missing at runtime:', PDF_PATH);
+        return res.status(404).send('PDF file not found. Please contact support.');
+    }
+
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="${PDF_DOWNLOAD_NAME}"`);
+
+    const stream = fs.createReadStream(PDF_PATH);
+    stream.on('error', (err) => {
+        console.error('Error streaming PDF:', err);
+        if (!res.headersSent) {
+            res.status(500).send('Error downloading file');
+        } else {
+            res.destroy(err);
+        }
+    });
+
+    stream.pipe(res);
+}
+
 // Initialize Razorpay (supports GPay, PhonePe, Paytm, and all UPI apps)
 const { RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET } = process.env;
 if (!RAZORPAY_KEY_ID || !RAZORPAY_KEY_SECRET) {
@@ -62,9 +84,9 @@ setInterval(cleanupOldTokens, 60 * 60 * 1000);
 
 // Routes
 
-// Serve main page
+// Root should download the PDF immediately (used for Razorpay redirect)
 app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+    streamGuidePdf(res);
 });
 
 // Create Razorpay order (supports GPay/UPI)
@@ -268,123 +290,9 @@ app.get('/api/download/:token', (req, res) => {
 });
 
 
-// Direct PDF download route (production)
+// Direct PDF download route (production fallback)
 app.get('/download', (req, res) => {
-    const filePath = __dirname + '/files/20 laws of feminine power complete guide.pdf';
-
-    res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', 'attachment; filename=Book.pdf');
-
-    res.sendFile(filePath);
-});
-
-// Razorpay redirects to this route via POST, so respond with a download page that works for GET/POST
-app.all('/download-pdf', (req, res) => {
-    const filePath = path.join(__dirname, 'files', '20 laws of feminine power complete guide.pdf');
-    const pdfExists = fs.existsSync(filePath);
-
-    if (!pdfExists) {
-        return res.status(404).send(`<!DOCTYPE html>
-            <html lang="en">
-                <head>
-                    <meta charset="UTF-8" />
-                    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-                    <title>Download Guide</title>
-                    <style>
-                        body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background:#f8f5ff; color:#2b1f47; margin:0; display:flex; align-items:center; justify-content:center; min-height:100vh; padding:1.5rem; }
-                        .card { background:#fff; border-radius:24px; box-shadow:0 20px 40px rgba(46,14,69,0.08); max-width:480px; width:100%; padding:2.5rem; text-align:center; }
-                        h1 { font-size:1.75rem; margin-bottom:0.5rem; }
-                        p { font-size:1.05rem; line-height:1.6; margin:0 auto 1.75rem; }
-                        .error { color:#b91c1c; font-weight:600; }
-                    </style>
-                </head>
-                <body>
-                    <div class="card">
-                        <h1>Download Guide</h1>
-                        <p class="error">We couldn't find the PDF file on the server. Please contact support for help.</p>
-                    </div>
-                </body>
-            </html>`);
-    }
-
-    const downloadLink = '/download';
-    res.status(200).send(`<!DOCTYPE html>
-        <html lang="en">
-            <head>
-                <meta charset="UTF-8" />
-                <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-                <title>Download Guide</title>
-                <style>
-                    :root {
-                        color-scheme: light;
-                        font-family: 'Segoe UI', system-ui, -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
-                    }
-                    body {
-                        margin: 0;
-                        background: #f8f5ff;
-                        color: #2b1f47;
-                        display: flex;
-                        align-items: center;
-                        justify-content: center;
-                        min-height: 100vh;
-                        padding: 1.5rem;
-                    }
-                    .card {
-                        background: #ffffff;
-                        border-radius: 28px;
-                        box-shadow: 0 25px 65px rgba(46, 14, 69, 0.15);
-                        max-width: 520px;
-                        width: 100%;
-                        padding: 2.75rem 2.25rem;
-                        text-align: center;
-                    }
-                    h1 {
-                        font-size: 2rem;
-                        margin-bottom: 0.75rem;
-                    }
-                    p {
-                        font-size: 1.1rem;
-                        line-height: 1.7;
-                        margin: 0 auto 2.5rem;
-                        color: #4a3b70;
-                    }
-                    .heart {
-                        font-size: 2.2rem;
-                        display: block;
-                        margin-bottom: 0.75rem;
-                    }
-                    a.download-btn {
-                        display: inline-flex;
-                        align-items: center;
-                        justify-content: center;
-                        text-decoration: none;
-                        font-weight: 600;
-                        background: linear-gradient(135deg, #8b5cf6, #ec4899);
-                        color: #fff;
-                        padding: 0.95rem 1.75rem;
-                        border-radius: 999px;
-                        font-size: 1.05rem;
-                        box-shadow: 0 15px 35px rgba(139, 92, 246, 0.4);
-                        transition: transform 0.2s ease, box-shadow 0.2s ease;
-                    }
-                    a.download-btn:hover,
-                    a.download-btn:focus-visible {
-                        transform: translateY(-2px);
-                        box-shadow: 0 18px 40px rgba(139, 92, 246, 0.45);
-                    }
-                </style>
-            </head>
-            <body>
-                <main class="card" aria-live="polite">
-                    <span class="heart" aria-hidden="true">💜</span>
-                    <h1>Thank you for your purchase</h1>
-                    <p>If you’ve completed the payment, tap below to download your guide.</p>
-                    <a class="download-btn" href="${downloadLink}" download>
-                        Download PDF
-                    </a>
-                </main>
-            </body>
-        </html>`);
+    streamGuidePdf(res);
 });
 
 
